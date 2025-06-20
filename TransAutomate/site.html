@@ -1,0 +1,108 @@
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>GM</title>
+  <link rel="icon" href="favicon.png" type="image/png">
+ 
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2c2c2c;
+      color: #f1f1f1;
+      padding: 20px;
+    }
+
+    h1, h2 {
+      color: #ffcc00;
+    }
+
+    textarea {
+      width: 100%;
+      height: 120px;
+      padding: 10px;
+      border: 1px solid #555;
+      border-radius: 5px;
+      background: #444;
+      color: #fff;
+      resize: vertical;
+    }
+
+    button {
+      background-color: #ffcc00;
+      color: #2c2c2c;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      margin-right: 10px;
+    }
+
+    button:hover {
+      background-color: #e6b800;
+    }
+
+    pre {
+      background: #444;
+      padding: 15px;
+      border: 1px solid #555;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      color: #fffcf2;
+    }
+
+    p {
+      color: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerador de Script Python - Automação DANFE / XML</h1>
+
+  <p>Insira as chaves (uma por linha):</p>
+  <textarea id="chaves"></textarea>
+  <br/><br/>
+  <button onclick="gerarScript()">Gerar Script Python</button>
+  <button onclick="copiarScript()">Copiar Script</button>
+
+  <h2>Script Python:</h2>
+  <pre id="output"></pre>
+
+  <script>
+    function gerarScript() {
+      const chavesInput = document.getElementById("chaves").value.trim().split("\n");
+      const chavesUnicas = Array.from(new Set(chavesInput.map(c => c.trim()).filter(c => c !== "")));
+
+      let listaChaves = chavesUnicas.map(c => `    "${c}"`).join(",\n");
+
+      const script = `
+chaves = [
+${listaChaves}
+]
+
+for chave in chaves:
+    print(f"Processando chave: {chave}")
+    # Aqui você pode colocar o código para baixar DANFE / XML
+`;
+
+      document.getElementById("output").textContent = script.trim();
+    }
+
+    function copiarScript() {
+      const output = document.getElementById("output").textContent;
+      if (!output) {
+        alert("Por favor, gere o script primeiro!");
+        return;
+      }
+
+      navigator.clipboard.writeText(output).then(() => {
+        alert("Script copiado para a área de transferência!");
+      }).catch(() => {
+        alert("Erro ao copiar. Verifique as permissões do navegador.");
+      });
+    }
+  </script>
+</body>
+</html>
