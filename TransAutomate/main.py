@@ -1,101 +1,103 @@
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+from tkinter import scrolledtext, messagebox
 import pyautogui
 import pyperclip
 import time
-from tqdm import tqdm
 import datetime
 import subprocess
 import shutil
 import os
 
+def iniciar_processo():
+    chaves = entrada_chaves.get("1.0", "end").strip().splitlines()
+    chaves_validas = [c.strip() for c in chaves if len(c.strip()) == 44 and c.strip().isdigit()]
 
-# TransAutomate - Automação de Download de DANFE e XML
+    if not chaves_validas:
+        messagebox.showerror("Erro", "Nenhuma chave válida foi inserida.")
+        return
 
-# Lista dos dados que você quer colar na barra de pesquisa
-dados = [
-    "35250360837457000187550010003361651178026607",
-]
+    messagebox.showinfo("Organize o navegador", "Você tem 5 segundos para organizar a tela do navegador.")
+    app.update()
+    time.sleep(5)
 
-# Coordenadas da tela
-barra_pesquisa_x = 509
-barra_pesquisa_y = 519
-botao_danfe_x = 941
-botao_danfe_y = 512
-botao_xml_x = 728
-botao_xml_y = 287
+    barra_pesquisa_x = 509
+    barra_pesquisa_y = 519
+    botao_danfe_x = 941
+    botao_danfe_y = 512
+    botao_xml_x = 728
+    botao_xml_y = 287
 
-print("Você tem 5 segundos para organizar a tela...")
-time.sleep(10)
+    inicio = datetime.datetime.now()
 
-# Estimar tempo por item (ajuste se quiser mais preciso)
-tempo_por_item = 7  # segundos aproximados por ciclo (2+1+1+2 + margem)
+    for chave in chaves_validas:
+        log(f"🔑 Processando: {chave}")
+        pyautogui.click(barra_pesquisa_x, barra_pesquisa_y)
+        time.sleep(0.3)
+        pyperclip.copy(chave)
+        pyautogui.hotkey('ctrl', 'v')
+        time.sleep(0.3)
+        pyautogui.press('enter')
+        time.sleep(3)
+        pyautogui.click(botao_danfe_x, botao_danfe_y)
+        time.sleep(3)
+        pyautogui.click(botao_xml_x, botao_xml_y)
+        time.sleep(3)
+        pyautogui.press('f5')
+        time.sleep(2)
 
-# Barra de progresso
-inicio = datetime.datetime.now()
+    duracao = datetime.datetime.now() - inicio
+    log(f"✅ Download concluído em {duracao}.")
 
-for chave in tqdm(dados, desc="Processando chaves", unit="chave", total=len(dados)):
-    t0 = time.time()
+    mover_xmls()
+    gerar_planilha()
 
-    # Clicar na barra de pesquisa
-    pyautogui.click(barra_pesquisa_x, barra_pesquisa_y)
-    time.sleep(0.3)
+def mover_xmls():
+    pasta_download = os.path.join(os.path.expanduser("~"), "Downloads")
+    pasta_destino = r"C:/Users/osgabriel/Documents/Xmls"
+    os.makedirs(pasta_destino, exist_ok=True)
 
-    # Colar a chave
-    pyperclip.copy(chave)
-    pyautogui.hotkey('ctrl', 'v')
-    time.sleep(0.3)
+    movidos = 0
+    for arquivo in os.listdir(pasta_download):
+        if arquivo.lower().endswith(".xml"):
+            origem = os.path.join(pasta_download, arquivo)
+            destino = os.path.join(pasta_destino, arquivo)
+            try:
+                shutil.move(origem, destino)
+                log(f"📁 Movido: {arquivo}")
+                movidos += 1
+            except Exception as e:
+                log(f"❌ Erro ao mover {arquivo}: {e}")
 
-    # Pressionar ENTER
-    pyautogui.press('enter')
-    time.sleep(3)  # espera o site carregar
+    if movidos == 0:
+        log("⚠️ Nenhum XML encontrado.")
+    else:
+        log(f"📦 {movidos} arquivo(s) XML movido(s).")
 
-    # Baixar DANFE
-    pyautogui.click(botao_danfe_x, botao_danfe_y)
-    time.sleep(3)
+def gerar_planilha():
+    log("📄 Gerando planilha de transportadoras...")
+    subprocess.run(["python", "C:/Users/osgabriel/Desktop/VsFolders/TransAutomate/Pt.py"])
+    log("✅ Planilha criada com sucesso!")
 
-    # Baixar XML
-    pyautogui.click(botao_xml_x, botao_xml_y)
-    time.sleep(3)
+def log(msg):
+    texto_log.insert("end", msg + "\n")
+    texto_log.see("end")
+    app.update()
 
-    # Atualiza a página
-    pyautogui.press('f5')
-    time.sleep(2)
+# === Interface com ttkbootstrap ===
+app = ttk.Window(themename="cosmo")
+app.title("TransAutomate - NF-e")
+app.geometry("700x600")
 
-    # Atualiza estimativa (tqdm faz isso automaticamente)
+ttk.Label(app, text="Cole as chaves das notas fiscais (uma por linha):", font=("Segoe UI", 11)).pack(pady=10)
 
-fim = datetime.datetime.now()
-duracao = fim - inicio
-print(f"Finalizado em {duracao}.")
+entrada_chaves = scrolledtext.ScrolledText(app, height=8, font=("Consolas", 10))
+entrada_chaves.pack(fill="both", padx=20)
 
-fim = datetime.datetime.now()
-duracao = fim - inicio
-print(f"Finalizado em {duracao}.")
+ttk.Button(app, text="Iniciar Processo", command=iniciar_processo, bootstyle="success").pack(pady=15)
 
-# Caminhos
-pasta_download = os.path.join(os.path.expanduser("~"), "Downloads")
-pasta_destino = r"C:/Users/osgabriel/Documents/Xmls"
+ttk.Label(app, text="Log do processo:", font=("Segoe UI", 10)).pack()
+texto_log = scrolledtext.ScrolledText(app, height=12, font=("Consolas", 9))
+texto_log.pack(fill="both", padx=20, pady=10)
 
-# Cria a pasta de destino se não existir
-os.makedirs(pasta_destino, exist_ok=True)
-
-# Move os arquivos .xml da pasta Downloads
-arquivos_movidos = 0
-for arquivo in os.listdir(pasta_download):
-    if arquivo.lower().endswith(".xml"):
-        origem = os.path.join(pasta_download, arquivo)
-        destino = os.path.join(pasta_destino, arquivo)
-        try:
-            shutil.move(origem, destino)
-            print(f"Movido: {arquivo}")
-            arquivos_movidos += 1
-        except Exception as e:
-            print(f"Erro ao mover {arquivo}: {e}")
-
-if arquivos_movidos == 0:
-    print("Nenhum arquivo XML encontrado na pasta de Downloads.")
-else:
-    print(f"{arquivos_movidos} arquivo(s) XML movido(s) para: {pasta_destino}")
-
-
-# Chama o script Pt.py após terminar o download
-print("Iniciando leitura dos arquivos XML...")
-subprocess.run(["python", "C:/Users/osgabriel/Desktop/VsFolders/TransAutomate/Pt.py"])
+app.mainloop()

@@ -1,0 +1,15 @@
+📦 TransAutomate GUI - Instruções Rápidas
+
+1. Requisitos (execute no PowerShell ou CMD):
+   C:/Users/osgabriel/AppData/Local/Programs/Python/Python313/python.exe -m pip install pyautogui pyperclip ttkbootstrap
+
+2. Para usar com interface (dois cliques):
+   ➤ Clique em: executar_transautomate.bat
+
+3. Para compilar como .exe:
+   ➤ Clique em: compilar_para_exe.bat
+   ➤ O executável aparecerá na pasta /dist
+
+4. Lembre-se:
+   - Ajuste as coordenadas do navegador se necessário.
+   - O Pt.py precisa estar no caminho correto.
